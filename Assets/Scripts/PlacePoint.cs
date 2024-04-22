@@ -1,7 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
@@ -13,9 +16,13 @@ public class PlacePoint : MonoBehaviour
     [SerializeField] ARRaycastManager arRaycastManager;
     [SerializeField] Camera cam;
 
+    // debug
+    [SerializeField] TextMeshProUGUI debugRaycast;
+
     Pose placementPose;
 
     GameObject[] points = new GameObject[3];
+    GameObject selectedObject;
     Label[] labels = new Label[3];
     int lastReplacedIndex;
 
@@ -38,13 +45,64 @@ public class PlacePoint : MonoBehaviour
             placementIndicator.SetActive(false);
         }
 
-        for (int i = 0; i < Input.touchCount; ++i)
+
+        SelectionPointLogic();
+
+        //for (int i = 0; i < Input.touchCount; ++i)
+        //{
+        //    if (Input.GetTouch(i).phase == TouchPhase.Began)
+        //    {
+        //        //add timer so if touching for 0.5 second then move point that was touched
+        //        PlaceAtCenter();
+        //    }
+        //}
+    }
+
+    void SelectionPointLogic()
+    {
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
-            if (Input.GetTouch(i).phase == TouchPhase.Began)
+            debugRaycast.text = "are we even in?";
+
+            Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit))
             {
-                //add timer so if touching for 0.5 second then move point that was touched
-                PlaceAtCenter();
+                List<ARRaycastHit> arHit = new List<ARRaycastHit>();
+                debugRaycast.text = arHit.Count().ToString();
+                if (arRaycastManager.Raycast(Input.GetTouch(0).position, arHit, TrackableType.AllTypes))
+                {
+                    SelectObject(arHit[0].trackable.gameObject);
+                }
             }
+        }
+    }
+
+    void SelectObject(GameObject obj)
+    {
+        DeselectObject();
+
+        selectedObject = obj;
+
+        Renderer renderer = selectedObject.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            renderer.material.color = Color.red;
+        }
+    }
+
+    void DeselectObject()
+    {
+        if (selectedObject != null)
+        {
+            Renderer renderer = selectedObject.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.material.color = Color.green;
+            }
+
+            selectedObject = null;
         }
     }
 
