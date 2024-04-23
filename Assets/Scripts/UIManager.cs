@@ -21,4 +21,9 @@ public class UIManager : MonoBehaviour
     {
 
     }
+
+    public void OnSelectBtnPress()
+    {
+        placePoint.SelectPoint();
+    }
 }

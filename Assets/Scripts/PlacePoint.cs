@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -14,15 +16,18 @@ public class PlacePoint : MonoBehaviour
     [SerializeField] GameObject labelPrefab;
     [SerializeField] GameObject placementIndicator;
     [SerializeField] ARRaycastManager arRaycastManager;
+    [SerializeField] LineRenderer lineRenderer;
     [SerializeField] Camera cam;
+    [Space]
+    [SerializeField] float pointSelectionThreshold = 10.0f;
 
     // debug
-    [SerializeField] TextMeshProUGUI debugRaycast;
+    [SerializeField] TextMeshProUGUI debugText;
 
     Pose placementPose;
 
     GameObject[] points = new GameObject[3];
-    GameObject selectedObject;
+    GameObject selectedPoint;
     Label[] labels = new Label[3];
     int lastReplacedIndex;
 
@@ -45,9 +50,6 @@ public class PlacePoint : MonoBehaviour
             placementIndicator.SetActive(false);
         }
 
-
-        SelectionPointLogic();
-
         //for (int i = 0; i < Input.touchCount; ++i)
         //{
         //    if (Input.GetTouch(i).phase == TouchPhase.Began)
@@ -56,54 +58,6 @@ public class PlacePoint : MonoBehaviour
         //        PlaceAtCenter();
         //    }
         //}
-    }
-
-    void SelectionPointLogic()
-    {
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
-        {
-            debugRaycast.text = "are we even in?";
-
-            Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit))
-            {
-                List<ARRaycastHit> arHit = new List<ARRaycastHit>();
-                debugRaycast.text = arHit.Count().ToString();
-                if (arRaycastManager.Raycast(Input.GetTouch(0).position, arHit, TrackableType.AllTypes))
-                {
-                    SelectObject(arHit[0].trackable.gameObject);
-                }
-            }
-        }
-    }
-
-    void SelectObject(GameObject obj)
-    {
-        DeselectObject();
-
-        selectedObject = obj;
-
-        Renderer renderer = selectedObject.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            renderer.material.color = Color.red;
-        }
-    }
-
-    void DeselectObject()
-    {
-        if (selectedObject != null)
-        {
-            Renderer renderer = selectedObject.GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                renderer.material.color = Color.green;
-            }
-
-            selectedObject = null;
-        }
     }
 
     public void PlaceAtCenter()
@@ -117,6 +71,7 @@ public class PlacePoint : MonoBehaviour
         points[currIndex] = Instantiate(pointPrefab, placementPose.position, placementPose.rotation);
 
         UpdateLabelsArray();
+        UpdatePointToPointLines();
     }
 
     void UpdateLabelsArray()
@@ -162,5 +117,84 @@ public class PlacePoint : MonoBehaviour
         lastReplacedIndex++;
         lastReplacedIndex %= len;
         return lastReplacedIndex;
+    }
+
+    void UpdatePointToPointLines()
+    {
+        var index = 0;
+        GameObject lastPoint = null;
+        foreach (GameObject point in points)
+        {
+            if (point == null)
+            {
+                if (lastPoint)
+                {
+                    lineRenderer.SetPosition(index++, lastPoint.transform.position);
+                }
+                continue;
+            }
+
+            lastPoint = point;
+            lineRenderer.SetPosition(index++, point.transform.position);
+        }
+    }
+
+    public void SelectPoint()
+    {
+        var currentCount = points.Count(e => e != null);
+        if (currentCount == 0 || !placementIndicator.activeSelf)
+        {
+            debugText.text = "no points";
+            return;
+        }
+
+        var closestDistance = Mathf.Infinity;
+        GameObject closestPoint = null;
+        foreach (GameObject point in points.Where(e => e != null))
+        {
+            var distanceToPoint = (point.transform.position - placementIndicator.transform.position).sqrMagnitude;
+            if (distanceToPoint < closestDistance)
+            {
+                closestDistance = distanceToPoint;
+                closestPoint = point;
+            }
+        }
+
+        if (closestPoint != null)
+        {
+            debugText.text = "point is should be selected, index of point: " + Array.IndexOf(points, closestPoint);
+        }
+
+        if (closestDistance <= pointSelectionThreshold)
+        {
+            SelectPoint(closestPoint);
+        }
+    }
+
+    void SelectPoint(GameObject point)
+    {
+        DeselectPoint();
+
+        selectedPoint = point;
+
+        Renderer renderer = selectedPoint.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            renderer.material.color = UnityEngine.Color.red;
+        }
+    }
+
+    void DeselectPoint()
+    {
+        if (selectedPoint != null)
+        {
+            Renderer renderer = selectedPoint.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.material.color = UnityEngine.Color.green;
+            }
+
+            selectedPoint = null;
+        }
     }
 }
