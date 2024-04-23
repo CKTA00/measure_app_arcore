@@ -74,6 +74,49 @@ public class PlacePoint : MonoBehaviour
         UpdatePointToPointLines();
     }
 
+    public void SelectPoint()
+    {
+        var currentCount = points.Count(e => e != null);
+        if (currentCount == 0 )
+        {
+            debugText.text = "no points";
+            return;
+        }
+
+        var closestDistance = Mathf.Infinity;
+        GameObject closestPoint = null;
+        foreach (GameObject point in points.Where(e => e != null))
+        {
+            var distanceToPoint = (point.transform.position - placementIndicator.transform.position).sqrMagnitude;
+            if (distanceToPoint < closestDistance)
+            {
+                closestDistance = distanceToPoint;
+                closestPoint = point;
+            }
+        }
+
+        if (closestPoint != null)
+        {
+            debugText.text = "point is should be selected, index of point: " + Array.IndexOf(points, closestPoint);
+        }
+
+        if (closestDistance <= pointSelectionThreshold)
+        {
+            SelectPoint(closestPoint);
+        }
+    }
+
+    public void RemoveSelectedPoint()
+    {
+        UpdateAndGetIndexToReplace();
+
+        points[Array.IndexOf(points, selectedPoint)] = null;
+        Destroy(selectedPoint);
+
+        UpdateLabelsArray();
+        UpdatePointsArray();
+    }
+
     void UpdateLabelsArray()
     {
         var currentCount = points.Count(e => e != null);
@@ -119,6 +162,11 @@ public class PlacePoint : MonoBehaviour
         return lastReplacedIndex;
     }
 
+    void UpdatePointsArray()
+    {
+        return;
+    }
+
     void UpdatePointToPointLines()
     {
         var index = 0;
@@ -136,38 +184,6 @@ public class PlacePoint : MonoBehaviour
 
             lastPoint = point;
             lineRenderer.SetPosition(index++, point.transform.position);
-        }
-    }
-
-    public void SelectPoint()
-    {
-        var currentCount = points.Count(e => e != null);
-        if (currentCount == 0 || !placementIndicator.activeSelf)
-        {
-            debugText.text = "no points";
-            return;
-        }
-
-        var closestDistance = Mathf.Infinity;
-        GameObject closestPoint = null;
-        foreach (GameObject point in points.Where(e => e != null))
-        {
-            var distanceToPoint = (point.transform.position - placementIndicator.transform.position).sqrMagnitude;
-            if (distanceToPoint < closestDistance)
-            {
-                closestDistance = distanceToPoint;
-                closestPoint = point;
-            }
-        }
-
-        if (closestPoint != null)
-        {
-            debugText.text = "point is should be selected, index of point: " + Array.IndexOf(points, closestPoint);
-        }
-
-        if (closestDistance <= pointSelectionThreshold)
-        {
-            SelectPoint(closestPoint);
         }
     }
 

@@ -14,7 +14,7 @@ public class UIManager : MonoBehaviour
 
     public void OnPointRemoveBtnPress()
     {
-
+        placePoint.RemoveSelectedPoint();
     }
 
     public void On90DegressBtnPress()
