@@ -1,12 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
@@ -76,8 +72,8 @@ public class PlacePoint : MonoBehaviour
 
     public void SelectPoint()
     {
-        var currentCount = points.Count(e => e != null);
-        if (currentCount == 0 )
+        var currentCount = CountPoints();
+        if (currentCount == 0)
         {
             debugText.text = "no points";
             return;
@@ -108,18 +104,16 @@ public class PlacePoint : MonoBehaviour
 
     public void RemoveSelectedPoint()
     {
-        UpdateAndGetIndexToReplace();
-
         points[Array.IndexOf(points, selectedPoint)] = null;
         Destroy(selectedPoint);
 
         UpdateLabelsArray();
-        UpdatePointsArray();
+        UpdatePointToPointLines();
     }
 
     void UpdateLabelsArray()
     {
-        var currentCount = points.Count(e => e != null);
+        var currentCount = CountPoints();
         ClearAllLabels();
         if (currentCount == 3)
         {
@@ -132,8 +126,9 @@ public class PlacePoint : MonoBehaviour
         }
         else if (currentCount == 2)
         {
+            var emptyPointIndex = Array.FindIndex(points,e => e == null);
             labels[0] = Instantiate(labelPrefab).GetComponent<Label>();
-            labels[0].SetPoints(points[0], points[1]);
+            labels[0].SetPoints(points[emptyPointIndex > 0 ? 0 : 1], points[emptyPointIndex > 1 ? 1 : 2]); // dark magic quick fix. Will implement as list for more than 3 points anyway
         }
     }
 
@@ -151,40 +146,30 @@ public class PlacePoint : MonoBehaviour
     int UpdateAndGetIndexToReplace()
     {
         var len = points.Length;
-        var currentCount = points.Count(e => e != null);
+        var currentCount = CountPoints();
         if (currentCount < len)
         {
-            lastReplacedIndex = currentCount;
-            return currentCount;
+            lastReplacedIndex = Array.FindIndex(points,e => e == null);
+            return lastReplacedIndex;
         }
         lastReplacedIndex++;
         lastReplacedIndex %= len;
         return lastReplacedIndex;
     }
 
-    void UpdatePointsArray()
-    {
-        return;
-    }
-
     void UpdatePointToPointLines()
     {
         var index = 0;
         GameObject lastPoint = null;
+        lineRenderer.positionCount = CountPoints();
         foreach (GameObject point in points)
         {
-            if (point == null)
+            if (point != null)
             {
-                if (lastPoint)
-                {
-                    lineRenderer.SetPosition(index++, lastPoint.transform.position);
-                }
-                continue;
+                lineRenderer.SetPosition(index++, point.transform.position);
             }
-
-            lastPoint = point;
-            lineRenderer.SetPosition(index++, point.transform.position);
         }
+        debugText.text = $"{index} final index";
     }
 
     void SelectPoint(GameObject point)
@@ -212,5 +197,10 @@ public class PlacePoint : MonoBehaviour
 
             selectedPoint = null;
         }
+    }
+
+    int CountPoints()
+    {
+        return points.Count(e => e != null);
     }
 }

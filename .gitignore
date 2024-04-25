@@ -73,3 +73,5 @@ crashlytics-build.properties
 
 # Other
 .idea
+/Assets/XR/Temp/
+/Assets/XR/Temp.meta
