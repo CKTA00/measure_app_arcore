@@ -220,7 +220,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4823120718036595193}
   m_Layer: 0
-  m_Name: Indicator
+  m_Name: Indicator1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

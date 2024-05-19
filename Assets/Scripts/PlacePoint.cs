@@ -11,6 +11,7 @@ public class PlacePoint : MonoBehaviour
     [SerializeField] GameObject pointPrefab;
     [SerializeField] GameObject labelPrefab;
     [SerializeField] GameObject placementIndicator;
+    [SerializeField] GameObject projectedIndicator;
     [SerializeField] ARPlaneManager arPlaneManager;
     [SerializeField] ARRaycastManager arRaycastManager;
     [SerializeField] LineRenderer lineRenderer;
@@ -24,9 +25,9 @@ public class PlacePoint : MonoBehaviour
     public bool showLineLabels = true;
     public bool showAngleLabels = false;
     public bool showAreaLabel = false;
+    public bool enforcedRightAngle = false;
 
     Pose placementPose;
-
     GameObject[] points = new GameObject[3];
     GameObject selectedPoint;
     Label[] labels = new Label[3 + 3 + 1];
@@ -55,10 +56,26 @@ public class PlacePoint : MonoBehaviour
             placementPose.rotation = Quaternion.LookRotation(cameraBearing);
             placementIndicator.SetActive(true);
             placementIndicator.transform.SetPositionAndRotation(placementPose.position, placementPose.rotation);
+
+            if (enforcedRightAngle && AreOnlyTwoPointsPlaced(out int indexA, out int indexB))
+            {
+                Vector3 projectedPosition = CalculateRightAnglePoint(
+                    points[indexA].transform.position,
+                    points[indexB].transform.position,
+                    placementPose.position);
+
+                projectedIndicator.SetActive(true);
+                projectedIndicator.transform.position = projectedPosition;
+            }
+            else
+            {
+                projectedIndicator.SetActive(false);
+            }
         }
         else
         {
             placementIndicator.SetActive(false);
+            projectedIndicator.SetActive(false);
         }
 
         // Objects (planes and labels) visibility
@@ -83,6 +100,21 @@ public class PlacePoint : MonoBehaviour
         helperRenderers[2].gameObject.SetActive(showAngleLabels);
 
         helperRenderers[3].gameObject.SetActive(showAreaLabel);
+    }
+
+    //
+    // Button pressed to switch to the "90 Degress Mode"
+    //
+    public void EnforceRightAngleToggle()
+    {
+        if (!enforcedRightAngle && (2 == CountPoints()))
+        {
+            enforcedRightAngle = true;
+        }
+        else
+        {
+            enforcedRightAngle = false;
+        }
     }
 
     //
@@ -111,7 +143,19 @@ public class PlacePoint : MonoBehaviour
             Destroy(points[currIndex]);
         }
 
-        points[currIndex] = Instantiate(pointPrefab, placementPose.position, placementPose.rotation);
+        // Determine the final point position
+        Vector3 positionToPlace;
+        if (enforcedRightAngle)
+        {
+            positionToPlace = projectedIndicator.transform.position;
+            enforcedRightAngle = false;
+        }
+        else
+        {
+            positionToPlace = placementPose.position;
+        }
+
+        points[currIndex] = Instantiate(pointPrefab, positionToPlace, placementPose.rotation);
 
         UpdateLabelsArray();
         UpdatePointToPointLines();
@@ -149,6 +193,7 @@ public class PlacePoint : MonoBehaviour
         if (closestDistance <= pointSelectionThreshold)
         {
             SelectPoint(closestPoint);
+            enforcedRightAngle = false;
         }
     }
 
@@ -162,6 +207,7 @@ public class PlacePoint : MonoBehaviour
             points[Array.IndexOf(points, selectedPoint)] = null;
             Destroy(selectedPoint);
             selectedPoint = null;
+            enforcedRightAngle = false;
         }
 
         UpdateLabelsArray();
@@ -196,11 +242,8 @@ public class PlacePoint : MonoBehaviour
             // Renderer for area
             helperRenderers[3].RenderArea(points[0], points[1], points[2]);
         }
-        else if (currentCount == 2)
+        else if (AreOnlyTwoPointsPlaced(out int indexA, out int indexB))
         {
-            var emptyPointIndex = Array.FindIndex(points,e => e == null);
-            int indexA = emptyPointIndex > 0 ? 0 : 1;
-            int indexB = emptyPointIndex > 1 ? 1 : 2;
             labels[0].SetLinePoints(points[indexA], points[indexB]);
         }
     }
@@ -282,5 +325,46 @@ public class PlacePoint : MonoBehaviour
     int CountPoints()
     {
         return points.Count(e => e != null);
+    }
+
+    bool AreOnlyTwoPointsPlaced(out int indexA, out int indexB)
+    {
+        if (2 != CountPoints())
+        {
+            indexA = (-1);
+            indexB = (-1);
+            return false;
+        }
+
+        int emptyPointIndex = Array.FindIndex(points, e => (e == null));
+        indexA = emptyPointIndex > 0 ? 0 : 1;
+        indexB = emptyPointIndex > 1 ? 1 : 2;
+
+        return true;
+    }
+
+    Vector3 CalculateRightAnglePoint(
+        Vector3 pointA,
+        Vector3 pointB,
+        Vector3 referencePoint)
+    {
+        // Determine which point is closer to the reference point
+        Vector3 closestPoint = (Vector3.Distance(pointA, referencePoint) < Vector3.Distance(pointB, referencePoint)) ? pointA : pointB;
+        Vector3 farthestPoint = (closestPoint == pointA) ? pointB : pointA;
+
+        // Calculate the normal to the plane defined by the three points
+        Vector3 vecCA = closestPoint - referencePoint;
+        Vector3 vecCB = farthestPoint - referencePoint;
+        Vector3 normal = Vector3.Cross(vecCA, vecCB).normalized;
+
+        // Calculate the direction of the line perpendicular to AB on the plane
+        Vector3 vecAB = farthestPoint - closestPoint;
+        Vector3 perpendicular = Vector3.Cross(vecAB, normal).normalized;
+
+        // Project the reference point onto the perpendicular line
+        Vector3 direction = referencePoint - closestPoint;
+        Vector3 projection = Vector3.Project(direction, perpendicular);
+
+        return closestPoint + projection;
     }
 }

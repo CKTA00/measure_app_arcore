@@ -41,7 +41,9 @@ public class UIManager : MonoBehaviour
     }
 
     public void On90DegBtnPress()
-    {}
+    {
+        placePoint.EnforceRightAngleToggle();
+    }
 
     public void OnShowPlanesToggle()
     {
