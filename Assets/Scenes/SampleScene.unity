@@ -283,7 +283,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 371403045}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 0}
 --- !u!4 &371403049
 Transform:
   m_ObjectHideFlags: 0
@@ -381,7 +381,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 453673805}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 0}
 --- !u!4 &453673809
 Transform:
   m_ObjectHideFlags: 0
@@ -707,7 +707,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 707367326}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 0}
 --- !u!4 &707367330
 Transform:
   m_ObjectHideFlags: 0
@@ -1165,11 +1165,11 @@ MonoBehaviour:
   pointPrefab: {fileID: 853287457398330102, guid: 666248785946ebf40a1f1000c20f4590, type: 3}
   labelPrefab: {fileID: 7498840308046604251, guid: 85f5ab66d572e854592179063fc2c2c6, type: 3}
   placementIndicator: {fileID: 1450087652538117906}
-  projectedIndicator: {fileID: 0}
+  projectedIndicator: {fileID: 2036266601}
   arPlaneManager: {fileID: 1163617264}
   arRaycastManager: {fileID: 1163617263}
   lineRenderer: {fileID: 3839444825612454712}
-  pointSelectionThreshold: 10
+  pointSelectionThreshold: 0.1
   debugText: {fileID: 1555901743}
   showDetectedPlanes: 0
   showLineLabels: 1
@@ -2064,7 +2064,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1790848560}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 0}
 --- !u!4 &1790848564
 Transform:
   m_ObjectHideFlags: 0
@@ -2214,6 +2214,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1938519019}
   m_CullTransparentMesh: 1
+--- !u!1 &2036266601 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6467292531950902056, guid: d42893b3bfc48ce49b5fa5671704cde8, type: 3}
+  m_PrefabInstance: {fileID: 2048091320}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2048091320
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -192,7 +192,16 @@ public class PlacePoint : MonoBehaviour
 
         if (closestDistance <= pointSelectionThreshold)
         {
-            SelectPoint(closestPoint);
+            // Deselect an already selected point
+            if (selectedPoint == closestPoint)
+            {
+                DeselectPoint();
+            }
+            else
+            {
+                SelectPoint(closestPoint);
+            }
+            
             enforcedRightAngle = false;
         }
     }
